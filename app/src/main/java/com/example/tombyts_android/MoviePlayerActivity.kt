@@ -51,7 +51,7 @@ class MoviePlayerActivity : AppCompatActivity() {
         playerView.player = player
 
         if (moviePath != null && token != null) {
-            val mediaItem = MediaItem.fromUri(Uri.parse("https://10.0.2.2:3001/media/$moviePath"))
+            val mediaItem = MediaItem.fromUri(Uri.parse("https://${BuildConfig.HOME_PC_IP}:3001/media/$moviePath"))
             player.setMediaItem(mediaItem)
             player.prepare()
             player.playWhenReady = true

@@ -1,6 +1,8 @@
 package com.example.tombyts_android
 
 import android.content.Context
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,8 +31,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 
 
 @Composable
@@ -75,10 +75,39 @@ fun LoginScreen(navController: NavController, snackbarHostState: SnackbarHostSta
                     }
                 }
             )
+            TestApiButton()
             LoginButton(username, password, navController)
         }
     }
 }
+
+@Composable
+fun TestApiButton() {
+    val coroutineScope = rememberCoroutineScope()
+    val apiService = Classes.ApiProvider.apiService
+    val Context = LocalContext.current
+
+    Button(onClick = {
+        coroutineScope.launch {
+            try {
+                val response = apiService.getResponse()
+                if (response.isSuccessful) {
+                    val responseBody = response.body()
+                    Log.d("blah", "API Response: $responseBody")
+                    Toast.makeText(Context, "API Response: $responseBody", Toast.LENGTH_LONG).show()
+                } else {
+                    Log.e("blah", "API Error: ${response.code()} ${response.message()}")
+                    Toast.makeText(Context, "API Error: ${response.code()} ${response.message()}", Toast.LENGTH_LONG).show()
+                }
+            }
+            catch (e: Exception) {
+                Log.e("blah", "API Exception", e)
+                Toast.makeText(Context, "API Exception: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }) {Text("Test API")}
+}
+
 
 @Composable
 fun LoginButton(username: String, password: String, navController: NavController) {
@@ -111,6 +140,7 @@ fun LoginButton(username: String, password: String, navController: NavController
                 }
             } catch (e: Exception) {
                 apiResponse = "API Exception: ${e.message}"
+                Log.e("blah", "API Exception", e)
             }
         }
     }) {
