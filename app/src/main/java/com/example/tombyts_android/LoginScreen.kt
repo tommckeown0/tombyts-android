@@ -84,13 +84,7 @@ fun LoginScreen(navController: NavController, snackbarHostState: SnackbarHostSta
 fun LoginButton(username: String, password: String, navController: NavController) {
     var apiResponse by remember { mutableStateOf("") } // State to hold API response
     val coroutineScope = rememberCoroutineScope()
-    val apiService = remember { // Create ApiService instance
-        Retrofit.Builder()
-            .baseUrl("https://10.0.2.2:3001/") // Replace with your backend URL
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(ApiService::class.java)
-    }
+    val apiService = Classes.ApiProvider.apiService
     val context = LocalContext.current
 
     Button(onClick = {
@@ -117,8 +111,6 @@ fun LoginButton(username: String, password: String, navController: NavController
                 }
             } catch (e: Exception) {
                 apiResponse = "API Exception: ${e.message}"
-                // Handle exception
-                // ...
             }
         }
     }) {
