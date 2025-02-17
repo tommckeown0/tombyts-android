@@ -22,4 +22,17 @@ interface ApiService {
         @Path("movieTitle") movieTitle: String,
         @Header("Authorization") token: String
     ): Response<MovieDetails>
+
+    @POST("/progress/{movieId}")
+    suspend fun updateProgress(
+        @Path("movieId") movieId: String,
+        @Header("Authorization") token: String,
+        @Body progressUpdate: ProgressUpdate
+    ): Response<ProgressResponse>
+
+    @GET("/progress/{movieId}")
+    suspend fun getProgress(
+        @Path("movieId") movieId: String,
+        @Header("Authorization") token: String
+    ): Response<ProgressResponse>
 }

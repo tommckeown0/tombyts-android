@@ -46,13 +46,13 @@ fun LoginScreen(navController: NavController, snackbarHostState: SnackbarHostSta
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            var username by remember { mutableStateOf("") }
-            var password by remember { mutableStateOf("") }
+            var username by remember { mutableStateOf("tom") }
+            var password by remember { mutableStateOf("password") }
 
             Text("Welcome to Tombyts")
             OutlinedTextField(
                 value = username,
-                onValueChange = { username = "tom" },
+                onValueChange = { username = it },
                 label = { Text("Username") },
                 placeholder = { Text("Enter your username") }
             )
@@ -60,7 +60,7 @@ fun LoginScreen(navController: NavController, snackbarHostState: SnackbarHostSta
             var passwordVisible by remember { mutableStateOf(false) }
             OutlinedTextField(
                 value = password,
-                onValueChange = { password = "password" },
+                onValueChange = { password = it },
                 label = { Text("Password") },
                 placeholder = { Text("Enter your password") },
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -85,7 +85,7 @@ fun LoginScreen(navController: NavController, snackbarHostState: SnackbarHostSta
 fun TestApiButton() {
     val coroutineScope = rememberCoroutineScope()
     val apiService = Classes.ApiProvider.apiService
-    val Context = LocalContext.current
+    val context = LocalContext.current
 
     Button(onClick = {
         coroutineScope.launch {
@@ -94,15 +94,15 @@ fun TestApiButton() {
                 if (response.isSuccessful) {
                     val responseBody = response.body()
                     Log.d("blah", "API Response: $responseBody")
-                    Toast.makeText(Context, "API Response: $responseBody", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, "API Response: $responseBody", Toast.LENGTH_LONG).show()
                 } else {
                     Log.e("blah", "API Error: ${response.code()} ${response.message()}")
-                    Toast.makeText(Context, "API Error: ${response.code()} ${response.message()}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, "API Error: ${response.code()} ${response.message()}", Toast.LENGTH_LONG).show()
                 }
             }
             catch (e: Exception) {
                 Log.e("blah", "API Exception", e)
-                Toast.makeText(Context, "API Exception: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "API Exception: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }) {Text("Test API")}

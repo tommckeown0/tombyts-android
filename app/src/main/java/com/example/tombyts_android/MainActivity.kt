@@ -43,11 +43,13 @@ class MainActivity : ComponentActivity() {
                         val movieTitle = backStackEntry.arguments?.getString("movieTitle") ?: ""
                         val token = backStackEntry.arguments?.getString("token") ?: ""
 
-                        // Start MoviePlayerActivity
-                        val intent = Intent(this@MainActivity, MoviePlayerActivity::class.java)
-                        intent.putExtra("movieTitle", movieTitle) // Pass movie path
-                        intent.putExtra("token", token) // Pass token
-                        startActivity(intent)
+//                        // Start MoviePlayerActivity
+//                        val intent = Intent(this@MainActivity, MoviePlayerActivity::class.java)
+//                        intent.putExtra("movieTitle", movieTitle) // Pass movie path
+//                        intent.putExtra("token", token) // Pass token
+//                        startActivity(intent)
+
+                        MoviePlayerScreen(movieTitle, token, navController)
                     }
                 }
             }
