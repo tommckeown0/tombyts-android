@@ -35,4 +35,11 @@ interface ApiService {
         @Path("movieId") movieId: String,
         @Header("Authorization") token: String
     ): Response<ProgressResponse>
+
+    @GET("/subs/subtitles/{movieTitle}/{language}") // Added subtitle endpoint
+    suspend fun getSubtitles(
+        @Path("movieTitle") movieTitle: String,
+        @Path("language") language: String,
+        @Header("Authorization") token: String
+    ): Response<String> // Assuming the response is the subtitle content as a string
 }

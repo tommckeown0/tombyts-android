@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -81,31 +82,87 @@ fun LoginScreen(navController: NavController, snackbarHostState: SnackbarHostSta
     }
 }
 
+//@Composable
+//fun TestApiButton() {
+//    val coroutineScope = rememberCoroutineScope()
+//    val apiService = Classes.ApiProvider.apiService
+//    val context = LocalContext.current
+//
+//    Button(onClick = {
+//        coroutineScope.launch {
+//            try {
+//                val response = apiService.getResponse()
+//                if (response.isSuccessful) {
+//                    val responseBody = response.body()
+//                    Log.d("blah", "API Response: $responseBody")
+//                    Toast.makeText(context, "API Response: $responseBody", Toast.LENGTH_LONG).show()
+//                } else {
+//                    Log.e("blah", "API Error: ${response.code()} ${response.message()}")
+//                    Toast.makeText(context, "API Error: ${response.code()} ${response.message()}", Toast.LENGTH_LONG).show()
+//                }
+//            }
+//            catch (e: Exception) {
+//                Log.e("blah", "API Exception", e)
+//                Toast.makeText(context, "API Exception: ${e.message}", Toast.LENGTH_LONG).show()
+//            }
+//        }
+//    }) {Text("Test API")}
+//}
+
 @Composable
 fun TestApiButton() {
     val coroutineScope = rememberCoroutineScope()
-    val apiService = Classes.ApiProvider.apiService
+    val apiService = Classes.ApiProvider.getSubtitleApiService()
     val context = LocalContext.current
+    var showDialog by remember { mutableStateOf(false) }
+    var subtitleText by remember { mutableStateOf("") }
 
     Button(onClick = {
         coroutineScope.launch {
             try {
-                val response = apiService.getResponse()
-                if (response.isSuccessful) {
-                    val responseBody = response.body()
-                    Log.d("blah", "API Response: $responseBody")
-                    Toast.makeText(context, "API Response: $responseBody", Toast.LENGTH_LONG).show()
+                // Hardcoded movie title and language for testing
+                val movieTitle = "Dune.Part.Two.2024.1080p.WEBRip.x264.AAC-[YTS.MX]"
+                val language = "en"
+                val token = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+                    .getString("auth_token", "") ?: ""
+
+                if (token.isNotEmpty()) {
+                    val response = apiService.getSubtitles(movieTitle, language, "Bearer $token")
+                    if (response.isSuccessful) {
+                        val subtitleContent = response.body() ?: ""
+                        val lines = subtitleContent.split("\n")
+                        val firstFewLines = lines.take(5).joinToString("\n") // Get first 5 lines
+                        Toast.makeText(context, "Subtitle:\n$firstFewLines", Toast.LENGTH_LONG).show()
+                        subtitleText = subtitleContent
+                        showDialog = true
+                    } else {
+                        Toast.makeText(context, "Failed to fetch subtitles: ${response.code()}", Toast.LENGTH_LONG).show()
+                        Log.e("blah", "Failed to fetch subtitles: ${response.code()} ${response.message()}")
+                    }
                 } else {
-                    Log.e("blah", "API Error: ${response.code()} ${response.message()}")
-                    Toast.makeText(context, "API Error: ${response.code()} ${response.message()}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, "No token found. Please login.", Toast.LENGTH_LONG).show()
                 }
-            }
-            catch (e: Exception) {
-                Log.e("blah", "API Exception", e)
-                Toast.makeText(context, "API Exception: ${e.message}", Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                Log.e("blah", "Error fetching subtitles", e)
             }
         }
-    }) {Text("Test API")}
+    }) {
+        Text("Test Subtitles")
+    }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("Subtitle") },
+            text = { Text(subtitleText) },
+            confirmButton = {
+                Button(onClick = { showDialog = false }) {
+                    Text("Close")
+                }
+            }
+        )
+    }
 }
 
 
