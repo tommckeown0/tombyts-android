@@ -19,7 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaItem.SubtitleConfiguration
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
@@ -28,6 +30,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
 
 @Composable
 fun MoviePlayerScreen(movieTitle: String, token: String, navController: NavController) {
@@ -87,8 +92,37 @@ fun MoviePlayerScreen(movieTitle: String, token: String, navController: NavContr
                 Log.d("API Error", "Error fetching progress: ${e.message}")
             }
 
-            val mediaItem = MediaItem.fromUri(Uri.parse("https://${BuildConfig
-                .HOME_PC_IP}:3001/media/$moviePath"))
+            var subtitleContent: String? = null
+            try {
+                val subtitleResponse = Classes.ApiProvider.getSubtitleApiService().getSubtitles(movieTitle, "en", "Bearer $token")
+                if (subtitleResponse.isSuccessful) {
+                    subtitleContent = subtitleResponse.body()
+                } else {
+                    Log.d("API Error", "Failed to fetch subtitles: ${subtitleResponse.code()}")
+                }
+            } catch (e: Exception) {
+                Log.d("API Error", "Error fetching subtitles: ${e.message}")
+            }
+
+            val tempFile = File.createTempFile("subtitle", ".vtt", context.cacheDir)
+            FileOutputStream(tempFile).use { fileOutputStream ->
+                fileOutputStream.write(subtitleContent!!.toByteArray())
+            }
+
+            // Build the subtitle configuration
+            val subtitleUri = Uri.fromFile(tempFile)
+            val subtitle = SubtitleConfiguration.Builder(subtitleUri)
+                .setMimeType("text/vtt")
+                .setLanguage("en")
+                .setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
+                .build()
+
+            // Build the media item
+            val mediaItem = MediaItem.Builder()
+                .setUri(Uri.parse("https://${BuildConfig.HOME_PC_IP}:3001/media/$moviePath"))
+                .setSubtitleConfigurations(listOf(subtitle))
+                .build()
+
             player.setMediaItem(mediaItem)
             player.prepare()
             player.playWhenReady = playWhenReady
