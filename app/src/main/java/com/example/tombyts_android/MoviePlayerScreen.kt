@@ -2,6 +2,8 @@ package com.example.tombyts_android
 
 import android.net.Uri
 import android.util.Log
+import android.view.View
+import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,21 +25,24 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaItem.SubtitleConfiguration
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.MediaSession
 import androidx.media3.ui.PlayerView
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 
+@OptIn(UnstableApi::class)
 @Composable
 fun MoviePlayerScreen(movieTitle: String, token: String, navController: NavController) {
     val context = LocalContext.current
     val player = remember { ExoPlayer.Builder(context).build() }
+    var mediaSession by remember { mutableStateOf<MediaSession?>(null) }
     var moviePath: String? by remember { mutableStateOf(null) }
     var playbackPosition by rememberSaveable { mutableLongStateOf(0L) }
     var playWhenReady by rememberSaveable { mutableStateOf(true) }
@@ -79,6 +84,8 @@ fun MoviePlayerScreen(movieTitle: String, token: String, navController: NavContr
     }
 
     LaunchedEffect(moviePath) {
+        mediaSession?.release()
+        mediaSession = MediaSession.Builder(context, player).build()
         hasSeeked.value = false
         if (moviePath != null) {
             try {
@@ -158,6 +165,7 @@ fun MoviePlayerScreen(movieTitle: String, token: String, navController: NavContr
             playWhenReady = player.playWhenReady
             player.removeListener(playerListener)
             player.release()
+            mediaSession?.release()
         }
     }
 
@@ -170,6 +178,14 @@ fun MoviePlayerScreen(movieTitle: String, token: String, navController: NavContr
                 PlayerView(context).apply {
                     useController = true
                     this.player = player
+                    isFocusable = true
+                    isFocusableInTouchMode = true
+
+                    setControllerVisibilityListener(PlayerView.ControllerVisibilityListener { visibility ->
+                    if (visibility == View.GONE) {
+                        postDelayed({ requestFocus() }, 100)
+                        }
+                    })
                 }
             },
             modifier = Modifier.fillMaxSize()

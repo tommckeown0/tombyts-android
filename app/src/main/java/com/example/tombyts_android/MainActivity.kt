@@ -1,6 +1,5 @@
 package com.example.tombyts_android
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -24,7 +23,7 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 NavHost(navController = navController, startDestination = "login") {
                     composable("login") {
-                        LoginScreen(navController, snackbarHostState) // Pass snackbarHostState
+                        LoginScreen(navController, snackbarHostState)
                     }
                     composable(
                         "movieList/{token}",
