@@ -1,5 +1,6 @@
 package com.example.tombyts_android
 
+import SimpleAuthPreferences
 import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
@@ -50,6 +51,10 @@ fun MovieListScreen(token: String, navController: NavController) {
                     } else {
                         error = "Failed to fetch movies"
                         Log.e("API Error", "Failed to fetch movies: ${response.code()}")
+                        val authPreferences = SimpleAuthPreferences(navController.context)
+                        authPreferences.clearAuthData()
+                        Thread.sleep(3000)
+                        navController.navigate("login")
                     }
                 } catch (e: Exception) {
                     error = "Error: ${e.message}"

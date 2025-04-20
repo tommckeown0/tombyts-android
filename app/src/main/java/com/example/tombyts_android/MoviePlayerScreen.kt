@@ -25,6 +25,7 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaItem.SubtitleConfiguration
 import androidx.media3.common.Player
+import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
@@ -60,6 +61,15 @@ fun MoviePlayerScreen(movieTitle: String, token: String, navController: NavContr
                     }
                 }
             }
+
+//            override fun onTracksChanged(tracks: Tracks) {
+//                for (group in tracks.groups) {
+//                    for (i in 0 until group.length) {
+//                        val format = group.getTrackFormat(i)
+//                        Log.d("Tracks", "Track: ${format.sampleMimeType} - ${format.language} - ${format.label}")
+//                    }
+//                }
+//            }
         }
     }
 
@@ -111,24 +121,26 @@ fun MoviePlayerScreen(movieTitle: String, token: String, navController: NavContr
                 Log.d("API Error", "Error fetching subtitles: ${e.message}")
             }
 
-            val tempFile = File.createTempFile("subtitle", ".vtt", context.cacheDir)
-            FileOutputStream(tempFile).use { fileOutputStream ->
-                fileOutputStream.write(subtitleContent!!.toByteArray())
+            val mediaItemBuilder = MediaItem.Builder()
+                .setUri(Uri.parse("https://${BuildConfig.HOME_PC_IP}:3001/media/$moviePath"))
+
+            if (!subtitleContent.isNullOrBlank()) {
+                val tempFile = File.createTempFile("subtitle", ".vtt", context.cacheDir)
+                FileOutputStream(tempFile).use { fileOutputStream ->
+                    fileOutputStream.write(subtitleContent.toByteArray())
+                }
+
+                val subtitleUri = Uri.fromFile(tempFile)
+                val subtitle = SubtitleConfiguration.Builder(subtitleUri)
+                    .setMimeType("text/vtt")
+                    .setLanguage("en")
+                    .setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
+                    .build()
+
+                mediaItemBuilder.setSubtitleConfigurations(listOf(subtitle))
             }
 
-            // Build the subtitle configuration
-            val subtitleUri = Uri.fromFile(tempFile)
-            val subtitle = SubtitleConfiguration.Builder(subtitleUri)
-                .setMimeType("text/vtt")
-                .setLanguage("en")
-                .setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
-                .build()
-
-            // Build the media item
-            val mediaItem = MediaItem.Builder()
-                .setUri(Uri.parse("https://${BuildConfig.HOME_PC_IP}:3001/media/$moviePath"))
-                .setSubtitleConfigurations(listOf(subtitle))
-                .build()
+            val mediaItem = mediaItemBuilder.build()
 
             player.setMediaItem(mediaItem)
             player.prepare()
