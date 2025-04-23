@@ -29,7 +29,8 @@ android {
             )
         }
         debug {
-            buildConfigField("String", "HOME_PC_IP", "\"${System.getenv("HOME_PC_IP") ?: project.property("HOME_PC_IP")}\"")
+//            buildConfigField("String", "SERVER_IP", "\"${System.getenv("SERVER_IP") ?: project.property("SERVER_IP")}\"")
+            buildConfigField("String", "SERVER_IP", "\"192.168.0.16\"")
         }
     }
     compileOptions {

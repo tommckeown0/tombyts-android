@@ -21,11 +21,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaItem.SubtitleConfiguration
 import androidx.media3.common.Player
-import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
@@ -49,6 +51,47 @@ fun MoviePlayerScreen(movieTitle: String, token: String, navController: NavContr
     var playWhenReady by rememberSaveable { mutableStateOf(true) }
     var progress by rememberSaveable { mutableDoubleStateOf(0.0) }
     val hasSeeked = rememberSaveable { mutableStateOf(false) }
+
+    val lifecycleOwner: LifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_START -> {
+                    // App is coming to foreground or screen is initialized/resumed
+                    // Ensure playWhenReady is considered here
+                    if (playWhenReady) {
+                        player.play()
+                    } else {
+                        player.pause() // If it was paused when backgrounded
+                    }
+                }
+                Lifecycle.Event.ON_PAUSE -> {
+                    // App is going to background or screen is paused
+                    // Save the current playWhenReady state before pausing
+                    playWhenReady = player.playWhenReady
+                    player.pause()
+                }
+                // Lifecycle.Event.ON_STOP -> {
+                // Optional: If you want to pause even on partial visibility loss, use ON_STOP
+                // player.pause()
+                // }
+                // Lifecycle.Event.ON_RESUME -> {
+                // ON_START is often sufficient, but you could use ON_RESUME too
+                // player.play() // Only if playWhenReady is true - ON_START handles this better
+                // }
+                else -> { /* Do Nothing */ }
+            }
+        }
+
+        // Add the observer to the lifecycle owner
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        // When the effect leaves the composition, remove the observer
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     val playerListener = remember {
         object : Player.Listener {
@@ -122,7 +165,7 @@ fun MoviePlayerScreen(movieTitle: String, token: String, navController: NavContr
             }
 
             val mediaItemBuilder = MediaItem.Builder()
-                .setUri(Uri.parse("https://${BuildConfig.HOME_PC_IP}:3001/media/$moviePath"))
+                .setUri(Uri.parse("https://${BuildConfig.SERVER_IP}:3001/media/$moviePath"))
 
             if (!subtitleContent.isNullOrBlank()) {
                 val tempFile = File.createTempFile("subtitle", ".vtt", context.cacheDir)
