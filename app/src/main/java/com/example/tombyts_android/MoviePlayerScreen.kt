@@ -236,9 +236,16 @@ fun MoviePlayerScreen(movieTitle: String, token: String, navController: NavContr
                     isFocusable = true
                     isFocusableInTouchMode = true
 
+                    post {
+                        if (!hasFocus()) {
+                            requestFocus()
+                            Log.d("Focus", "PlayerView requested focus via post")
+                        }
+                    }
+
                     setControllerVisibilityListener(PlayerView.ControllerVisibilityListener { visibility ->
-                    if (visibility == View.GONE) {
-                        postDelayed({ requestFocus() }, 100)
+                        if (visibility == View.GONE) {
+                            postDelayed({ requestFocus() }, 100)
                         }
                     })
                 }

@@ -41,14 +41,14 @@ fun QuickPlayScreen(navController: NavController, snackbarHostState: SnackbarHos
     val mediaSession = remember(player) { MediaSession.Builder(context, player).build() }
     val movieUrl = "https://storage.googleapis.com/exoplayer-test-media-0/BigBuckBunny_320x180.mp4"
     val subtitleContent = """WEBVTT
-1
-00:00:00.000 --> 00:00:05.000
-Hello, this is a test subtitle.
-
-2
-00:00:05.500 --> 00:00:10.000
-Enjoy the movie!
-"""
+        1
+        00:00:00.000 --> 00:00:05.000
+        Hello, this is a test subtitle.
+        
+        2
+        00:00:05.500 --> 00:00:10.000
+        Enjoy the movie!
+        """
 
     LaunchedEffect(player) {
         val tempFile = File.createTempFile("subtitle", ".vtt", context.cacheDir)
