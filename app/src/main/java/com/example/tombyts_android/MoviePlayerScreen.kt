@@ -28,8 +28,10 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaItem.SubtitleConfiguration
 import androidx.media3.common.Player
+import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.session.MediaSession
 import androidx.media3.ui.PlayerView
 import androidx.navigation.NavController
@@ -105,6 +107,32 @@ fun MoviePlayerScreen(movieTitle: String, token: String, navController: NavContr
                 }
             }
 
+            override fun onTracksChanged(tracks: Tracks) {
+                // Log available subtitle tracks
+                for (group in tracks.groups) {
+                    if (group.type == C.TRACK_TYPE_TEXT) {
+                        for (i in 0 until group.length) {
+                            val format = group.getTrackFormat(i)
+                            Log.d("Subtitles", "Available subtitle track: ${format.language} - ${format.label ?: "Unknown"}")
+                        }
+                    }
+                }
+
+                // Automatically select first English subtitle track if available
+                val trackSelector = (player as ExoPlayer).trackSelector
+                if (trackSelector is DefaultTrackSelector) {
+                    val parametersBuilder = trackSelector.buildUponParameters()
+
+                    // Prefer English subtitles
+                    parametersBuilder.setPreferredTextLanguage("en")
+
+                    // You can also force subtitles to be selected
+                    // parametersBuilder.setRendererDisabled(C.TRACK_TYPE_TEXT, false)
+
+                    trackSelector.setParameters(parametersBuilder)
+                }
+            }
+
 //            override fun onTracksChanged(tracks: Tracks) {
 //                for (group in tracks.groups) {
 //                    for (i in 0 until group.length) {
@@ -152,6 +180,9 @@ fun MoviePlayerScreen(movieTitle: String, token: String, navController: NavContr
                 Log.d("API Error", "Error fetching progress: ${e.message}")
             }
 
+            val mediaItemBuilder = MediaItem.Builder()
+                .setUri(Uri.parse("https://${BuildConfig.SERVER_IP}:3001/media/$moviePath"))
+
             var subtitleContent: String? = null
             try {
                 val subtitleResponse = Classes.ApiProvider.getSubtitleApiService().getSubtitles(movieTitle, "en", "Bearer $token")
@@ -164,8 +195,8 @@ fun MoviePlayerScreen(movieTitle: String, token: String, navController: NavContr
                 Log.d("API Error", "Error fetching subtitles: ${e.message}")
             }
 
-            val mediaItemBuilder = MediaItem.Builder()
-                .setUri(Uri.parse("https://${BuildConfig.SERVER_IP}:3001/media/$moviePath"))
+//            val mediaItemBuilder = MediaItem.Builder()
+//                .setUri(Uri.parse("https://${BuildConfig.SERVER_IP}:3001/media/$moviePath"))
 
             if (!subtitleContent.isNullOrBlank()) {
                 val tempFile = File.createTempFile("subtitle", ".vtt", context.cacheDir)
